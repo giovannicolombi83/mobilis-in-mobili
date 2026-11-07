@@ -17,44 +17,47 @@ function load(k) { try { const v = localStorage.getItem(k); return v ? JSON.pars
 function drop(k) { try { localStorage.removeItem(k); } catch (e) { } }
 
 // ------------------------------------------------ lingua
-let lang = load(LANG) || ((navigator.language || 'it').toLowerCase().startsWith('it') ? 'it' : 'en');
-const L = (it, en) => lang === 'en' ? en : it;
-const tx = m => (m && typeof m === 'object') ? (m[lang] || m.it) : m;
+const NAV_LANG = (navigator.language || 'it').toLowerCase();
+let lang = load(LANG) || (NAV_LANG.startsWith('it') ? 'it' : NAV_LANG.startsWith('sv') ? 'sv' : 'en');
+const L = (it, en, sv) => lang === 'en' ? en : lang === 'sv' ? (sv === undefined ? en : sv) : it;
+const tx = m => (m && typeof m === 'object') ? (m[lang] || m.en || m.it) : m;
 const FLAG = {
   it: '<svg viewBox="0 0 3 2" aria-hidden="true"><rect width="1" height="2" fill="#009246"/><rect x="1" width="1" height="2" fill="#fff"/><rect x="2" width="1" height="2" fill="#ce2b37"/></svg>',
-  en: '<svg viewBox="0 0 60 30" aria-hidden="true"><clipPath id="ukS"><path d="M0,0 v30 h60 v-30 z"/></clipPath><clipPath id="ukT"><path d="M30,15 h30 v15 z v15 h-30 z h-30 v-15 z v-15 h30 z"/></clipPath><g clip-path="url(#ukS)"><path d="M0,0 v30 h60 v-30 z" fill="#012169"/><path d="M0,0 L60,30 M60,0 L0,30" stroke="#fff" stroke-width="6"/><path d="M0,0 L60,30 M60,0 L0,30" clip-path="url(#ukT)" stroke="#C8102E" stroke-width="4"/><path d="M30,0 v30 M0,15 h60" stroke="#fff" stroke-width="10"/><path d="M30,0 v30 M0,15 h60" stroke="#C8102E" stroke-width="6"/></g></svg>'
+  en: '<svg viewBox="0 0 60 30" aria-hidden="true"><clipPath id="ukS"><path d="M0,0 v30 h60 v-30 z"/></clipPath><clipPath id="ukT"><path d="M30,15 h30 v15 z v15 h-30 z h-30 v-15 z v-15 h30 z"/></clipPath><g clip-path="url(#ukS)"><path d="M0,0 v30 h60 v-30 z" fill="#012169"/><path d="M0,0 L60,30 M60,0 L0,30" stroke="#fff" stroke-width="6"/><path d="M0,0 L60,30 M60,0 L0,30" clip-path="url(#ukT)" stroke="#C8102E" stroke-width="4"/><path d="M30,0 v30 M0,15 h60" stroke="#fff" stroke-width="10"/><path d="M30,0 v30 M0,15 h60" stroke="#C8102E" stroke-width="6"/></g></svg>',
+  sv: '<svg viewBox="0 0 16 10" aria-hidden="true"><rect width="16" height="10" fill="#006AA7"/><rect x="5" width="2" height="10" fill="#FECC02"/><rect y="4" width="16" height="2" fill="#FECC02"/></svg>'
 };
 const STATIC = {
-  modeAI: ['Contro AI', 'Vs AI'], modeTeam: ['4 a squadre', '4 in teams'], modeSolo: ['Solitario', 'Solo'],
-  addSeat: ['+ Aggiungi giocatore', '+ Add player'], start: ['Salpa', 'Set sail'], resume: ['Continua la partita salvata', 'Continue saved game'],
-  rules: ['Regole in breve', 'Quick rules'], proto: ['prototipo di playtest', 'playtest prototype'],
-  secSea: ['Mare delle Memorie', 'Sea of Memories'], secEq: ['Equilibrio della mente di Nemo', 'Equilibrium of Nemo\'s mind']
+  modeAI: ['Contro AI', 'Vs AI', 'Mot AI'], modeTeam: ['4 a squadre', '4 in teams', '4 i lag'], modeSolo: ['Solitario', 'Solo', 'Solo'],
+  addSeat: ['+ Aggiungi giocatore', '+ Add player', '+ Lägg till spelare'], start: ['Salpa', 'Set sail', 'Sätt segel'], resume: ['Continua la partita salvata', 'Continue saved game', 'Fortsätt sparat spel'],
+  rules: ['Regole in breve', 'Quick rules', 'Snabbregler'], proto: ['prototipo di playtest', 'playtest prototype', 'speltestprototyp'],
+  secSea: ['Mare delle Memorie', 'Sea of Memories', 'Minnenas hav'], secEq: ['Equilibrio della mente di Nemo', 'Equilibrium of Nemo\'s mind', 'Jämvikten i Nemos sinne']
 };
 function langButtons(cls) {
-  return ['it', 'en'].map(l => `<button class="flag ${l === lang ? 'on' : ''} ${cls || ''}" data-lang="${l}">${FLAG[l]}${l === 'it' ? 'Italiano' : 'English'}</button>`).join('');
+  const NAME = { it: 'Italiano', en: 'English', sv: 'Svenska' };
+  return ['it', 'en', 'sv'].map(l => `<button class="flag ${l === lang ? 'on' : ''} ${cls || ''}" data-lang="${l}">${FLAG[l]}${NAME[l]}</button>`).join('');
 }
 function setLang(l) {
   lang = l; store(LANG, l); document.documentElement.lang = l;
-  document.querySelectorAll('[data-i18n]').forEach(el => { const v = STATIC[el.dataset.i18n]; if (v) el.textContent = lang === 'en' ? v[1] : v[0]; });
+  document.querySelectorAll('[data-i18n]').forEach(el => { const v = STATIC[el.dataset.i18n]; if (v) el.textContent = lang === 'en' ? v[1] : lang === 'sv' ? v[2] : v[0]; });
   $('langBar').innerHTML = langButtons();
   if ($('game').classList.contains('hidden')) renderSetup(); else render();
 }
 $('langBar').addEventListener('click', e => { const b = e.target.closest('[data-lang]'); if (b) setLang(b.dataset.lang); });
 
-const CHAR_NAME = { ARONNAX: ['Dr. Aronnax', 'Dr. Aronnax'], CONSEIL: ['Conseil', 'Conseil'], NED: ['Ned Land', 'Ned Land'], EGO: ['Ego di Nemo', 'Nemo\'s Ego'] };
+const CHAR_NAME = { ARONNAX: ['Dr. Aronnax', 'Dr. Aronnax', 'Dr. Aronnax'], CONSEIL: ['Conseil', 'Conseil', 'Conseil'], NED: ['Ned Land', 'Ned Land', 'Ned Land'], EGO: ['Ego di Nemo', 'Nemo\'s Ego', 'Nemos Ego'] };
 const portrait = c => c ? 'img/' + c + '.jpg' : 'img/nautcard.jpg';
 const pname = p => p.char ? L(...CHAR_NAME[p.char]) : 'Nemo';
-const Q_TXT = () => ({ NE: L('Nord-Est (Revenge)', 'North-East (Revenge)'), SE: L('Sud-Est (Revolution)', 'South-East (Revolution)'), SW: L('Sud-Ovest (Technology)', 'South-West (Technology)'), NW: L('Nord-Ovest (Voyage)', 'North-West (Voyage)') });
-const DIR_TXT = () => ({ N: L('Nord (Egoismo)', 'North (Egoism)'), S: L('Sud (Altruismo)', 'South (Altruism)'), E: L('Est (Passione)', 'East (Passion)'), W: L('Ovest (Razionalità)', 'West (Rationality)'),
-  NE: L('Nord-Est', 'North-East'), SE: L('Sud-Est', 'South-East'), SW: L('Sud-Ovest', 'South-West'), NW: L('Nord-Ovest', 'North-West') });
+const Q_TXT = () => ({ NE: L('Nord-Est (Revenge)', 'North-East (Revenge)', 'Nordost (Revenge)'), SE: L('Sud-Est (Revolution)', 'South-East (Revolution)', 'Sydost (Revolution)'), SW: L('Sud-Ovest (Technology)', 'South-West (Technology)', 'Sydväst (Technology)'), NW: L('Nord-Ovest (Voyage)', 'North-West (Voyage)', 'Nordväst (Voyage)') });
+const DIR_TXT = () => ({ N: L('Nord (Egoismo)', 'North (Egoism)', 'Norr (Egoism)'), S: L('Sud (Altruismo)', 'South (Altruism)', 'Söder (Altruism)'), E: L('Est (Passione)', 'East (Passion)', 'Öster (Passion)'), W: L('Ovest (Razionalità)', 'West (Rationality)', 'Väster (Rationalitet)'),
+  NE: L('Nord-Est', 'North-East', 'Nordost'), SE: L('Sud-Est', 'South-East', 'Sydost'), SW: L('Sud-Ovest', 'South-West', 'Sydväst'), NW: L('Nord-Ovest', 'North-West', 'Nordväst') });
 const FX_TXT = () => ({
-  '+T': L('prendi un tesoro e mettilo nello Scrigno', 'take a Treasure and put it in the Chest'),
-  '-T': L('consuma un tesoro dello Scrigno', 'spend a Treasure from the Chest'),
-  '+B': L('aggiungi una lampadina in una camera a scelta', 'add a Light Bulb to a chamber of your choice'),
-  '+U': L('aggiungi un Uprising nella camera Attack', 'add an Uprising to the Attack chamber'),
-  '+S': L('aggiungi un marinaio in una camera a scelta', 'add a Sailor to a chamber of your choice'),
-  '-S': L('togli un marinaio da una camera a scelta', 'remove a Sailor from a chamber of your choice'),
-  '-W': L('consuma un relitto dell\'Abyssal Graveyard', 'consume a Wreck from the Abyssal Graveyard')
+  '+T': L('prendi un tesoro e mettilo nello Scrigno', 'take a Treasure and put it in the Chest', 'ta en Skatt och lägg den i Skattkistan'),
+  '-T': L('consuma un tesoro dello Scrigno', 'spend a Treasure from the Chest', 'använd en Skatt från Skattkistan'),
+  '+B': L('aggiungi una lampadina in una camera a scelta', 'add a Light Bulb to a chamber of your choice', 'lägg en Glödlampa i valfri kammare'),
+  '+U': L('aggiungi un Uprising nella camera Attack', 'add an Uprising to the Attack chamber', 'lägg ett Uppror i Attack-kammaren'),
+  '+S': L('aggiungi un marinaio in una camera a scelta', 'add a Sailor to a chamber of your choice', 'lägg en Sjöman i valfri kammare'),
+  '-S': L('togli un marinaio da una camera a scelta', 'remove a Sailor from a chamber of your choice', 'ta bort en Sjöman från valfri kammare'),
+  '-W': L('consuma un relitto dell\'Abyssal Graveyard', 'consume a Wreck from the Abyssal Graveyard', 'förbruka ett Vrak från Abyssal Graveyard')
 });
 
 // ------------------------------------------------ schermata iniziale
@@ -72,17 +75,17 @@ function renderSetup() {
   if (cfg.mode === 'solo') {
     $('seats').innerHTML = `<p class="solo-note">${L(
       'Sei Nemo, da solo contro la sua <b>Nemesis</b>: l\'Ombra segue il Nautilus, blocca la carta appena lasciata e reclama la memoria su cui si trova ogni volta che reclami tu. Si vince solo nel <b>Maelstrom</b>, con più simboli Fate della Nemesis. Un Meltdown è la sconfitta.',
-      'You are Nemo, alone against his <b>Nemesis</b>: the Shadow follows the Nautilus, blocks the card you just left and reclaims the Memory it stands on every time you reclaim one. You can only win in the <b>Maelstrom</b>, with more Fate symbols than the Nemesis. A Meltdown means defeat.')}</p>`;
+      'You are Nemo, alone against his <b>Nemesis</b>: the Shadow follows the Nautilus, blocks the card you just left and reclaims the Memory it stands on every time you reclaim one. You can only win in the <b>Maelstrom</b>, with more Fate symbols than the Nemesis. A Meltdown means defeat.', 'Du är Nemo, ensam mot sin <b>Nemesis</b>: Skuggan följer Nautilus, blockerar kortet du just lämnat och återtar minnet den står på varje gång du återtar ett. Du kan bara vinna i <b>Maelstrom</b>, med fler Ödessymboler än Nemesis. En Meltdown betyder nederlag.')}</p>`;
     $('addSeat').classList.add('hidden');
   } else {
     cfg.seats = seatsFor(cfg.mode);
     const used = cfg.seats.map(s => s.char);
     $('seats').innerHTML = cfg.seats.map((s, i) => `<div class="seat">
       <img src="${portrait(s.char)}" alt="">
-      ${cfg.mode === 'team' ? `<span class="tm">${L('Squadra', 'Team')} ${i % 2 ? 'B' : 'A'}</span>` : ''}
+      ${cfg.mode === 'team' ? `<span class="tm">${L('Squadra', 'Team', 'Lag')} ${i % 2 ? 'B' : 'A'}</span>` : ''}
       <select data-c="${i}">${Object.keys(E.CHARS).map(c => `<option value="${c}" ${c === s.char ? 'selected' : ''} ${c !== s.char && used.includes(c) ? 'disabled' : ''}>${L(...CHAR_NAME[c])}</option>`).join('')}</select>
-      <button class="toggle ${s.ai ? 'ai' : 'me'}" data-t="${i}">${s.ai ? 'AI' : L('Tu', 'You')}</button>
-      ${cfg.mode === 'multi' && cfg.seats.length > 2 ? `<button class="x" data-x="${i}" aria-label="${L('Togli', 'Remove')}">✕</button>` : ''}</div>`).join('');
+      <button class="toggle ${s.ai ? 'ai' : 'me'}" data-t="${i}">${s.ai ? 'AI' : L('Tu', 'You', 'Du')}</button>
+      ${cfg.mode === 'multi' && cfg.seats.length > 2 ? `<button class="x" data-x="${i}" aria-label="${L('Togli', 'Remove', 'Ta bort')}">✕</button>` : ''}</div>`).join('');
     $('addSeat').classList.toggle('hidden', cfg.mode !== 'multi' || cfg.seats.length >= 3);
   }
   $('resumeBtn').classList.toggle('hidden', !load(SAVE));
@@ -96,7 +99,7 @@ $('seats').addEventListener('click', e => {
 $('seats').addEventListener('change', e => { if (e.target.dataset.c !== undefined) { cfg.seats[+e.target.dataset.c].char = e.target.value; renderSetup(); } });
 $('addSeat').onclick = () => { const c = Object.keys(E.CHARS).find(x => !cfg.seats.some(s => s.char === x)); cfg.seats.push({ char: c, ai: true }); renderSetup(); };
 $('startBtn').onclick = () => {
-  if (cfg.mode !== 'solo' && !cfg.seats.some(s => !s.ai)) { toast(L('Almeno un giocatore deve essere umano.', 'At least one player must be human.'), 'bad'); return; }
+  if (cfg.mode !== 'solo' && !cfg.seats.some(s => !s.ai)) { toast(L('Almeno un giocatore deve essere umano.', 'At least one player must be human.', 'Minst en spelare måste vara människa.'), 'bad'); return; }
   store(CFG, cfg);
   E.newGame({ mode: cfg.mode, players: cfg.mode === 'solo' ? [] : cfg.seats.map(s => ({ char: s.char, ai: s.ai })) });
   startGame();
@@ -164,11 +167,11 @@ function hlFor(d) {
 function playFx() {
   const s = S(); const list = s.fx.splice(0); let d = 0;
   for (const f of list) {
-    if (f.t === 'meltdown') setTimeout(() => toast(L('MELTDOWN! La mente di Nemo crolla.', 'MELTDOWN! Nemo\'s mind collapses.'), 'bad'), d += 150);
-    else if (f.t === 'sink') setTimeout(() => toast(L('Nave affondata: un relitto nell\'Abyssal Graveyard', 'Warship sunk: a Wreck in the Abyssal Graveyard')), d += 150);
-    else if (f.t === 'ship') setTimeout(() => toast(L('Una nave da guerra entra in rotta', 'A Warship enters the route'), 'bad'), d += 150);
-    else if (f.t === 'maelstrom') setTimeout(() => toast(L('Un Maelstrom emerge in fondo al fiume!', 'A Maelstrom emerges at the end of the River!'), 'big'), d += 150);
-    else if (f.t === 'reclaim') setTimeout(() => toast(L('Memoria reclamata: «', 'Memory reclaimed: “') + E.card(f.id).title + L('»', '”')), d += 100);
+    if (f.t === 'meltdown') setTimeout(() => toast(L('MELTDOWN! La mente di Nemo crolla.', 'MELTDOWN! Nemo\'s mind collapses.', 'MELTDOWN! Nemos sinne kollapsar.'), 'bad'), d += 150);
+    else if (f.t === 'sink') setTimeout(() => toast(L('Nave affondata: un relitto nell\'Abyssal Graveyard', 'Warship sunk: a Wreck in the Abyssal Graveyard', 'Krigsskepp sänkt: ett Vrak i Abyssal Graveyard')), d += 150);
+    else if (f.t === 'ship') setTimeout(() => toast(L('Una nave da guerra entra in rotta', 'A Warship enters the route', 'Ett Krigsskepp går in på rutten'), 'bad'), d += 150);
+    else if (f.t === 'maelstrom') setTimeout(() => toast(L('Un Maelstrom emerge in fondo al fiume!', 'A Maelstrom emerges at the end of the River!', 'En Maelstrom dyker upp i slutet av Floden!'), 'big'), d += 150);
+    else if (f.t === 'reclaim') setTimeout(() => toast(L('Memoria reclamata: «', 'Memory reclaimed: “', 'Minne återtaget: ”') + E.card(f.id).title + L('»', '”', '”')), d += 100);
   }
 }
 function toast(html, cls) { const t = document.createElement('div'); t.className = 'toast ' + (cls || ''); t.innerHTML = html; $('toasts').appendChild(t); setTimeout(() => t.remove(), 3100); }
@@ -200,41 +203,41 @@ function renderStatus() {
   const s = S(); const p = s.players[s.turn];
   let h = `<b>Round ${s.round}</b>`;
   if (s.phase === 'PLAY') h += `<span class="turnchip"><img src="${portrait(p.char)}" alt="">${pname(p)}</span><span class="pips">${'●'.repeat(Math.max(0, s.actions))}${'○'.repeat(3 - Math.max(0, s.actions))}</span>`;
-  else h += ' · ' + L('fine partita', 'game over');
+  else h += ' · ' + L('fine partita', 'game over', 'spelet är slut');
   $('status').innerHTML = h;
 }
 function condIcons(p) { return E.CHARS[p.char].conds.map(c => `<span class="${E.condMet(c) ? 'ok' : 'no'}">${c[0]}${c.slice(1, 3).toLowerCase()}</span>`).join(' ') + ` <span class="${E.inHalf(E.CHARS[p.char].half) ? 'ok' : 'no'}">Eq</span>`; }
 function renderPlayers() {
   const s = S();
-  const fateTxt = cards => `⌘${E.fateCount(cards, 'K')} Ⓐ${E.fateCount(cards, 'A')} · ${cards.length} ${L('carte', 'cards')}`;
+  const fateTxt = cards => `⌘${E.fateCount(cards, 'K')} Ⓐ${E.fateCount(cards, 'A')} · ${cards.length} ${L('carte', 'cards', 'kort')}`;
   if (s.mode === 'solo') {
     $('players').innerHTML = `<button class="pchip on" data-p="0"><img src="img/nautcard.jpg" alt=""><div><div class="n">Nemo</div><div class="m">${fateTxt(s.players[0].cards)}</div></div></button>
       <button class="pchip" data-p="nem"><img src="img/nemesis.jpg" alt=""><div><div class="n">Nemesis</div><div class="m">${fateTxt(s.nemLoot)}</div></div></button>`;
     return;
   }
   $('players').innerHTML = s.players.map(p => `<button class="pchip ${p.idx === s.turn && s.phase === 'PLAY' ? 'on' : ''} ${E.canWin(p) ? 'win' : ''}" data-p="${p.idx}">
-    <img src="${portrait(p.char)}" alt=""><div style="min-width:0"><div class="n">${s.mode === 'team' ? (p.team ? 'B · ' : 'A · ') : ''}${pname(p)}${p.ai ? '' : ' (' + L('tu', 'you') + ')'}</div>
+    <img src="${portrait(p.char)}" alt=""><div style="min-width:0"><div class="n">${s.mode === 'team' ? (p.team ? 'B · ' : 'A · ') : ''}${pname(p)}${p.ai ? '' : ' (' + L('tu', 'you', 'du') + ')'}</div>
     <div class="m">${condIcons(p)}</div><div class="m">${fateTxt(p.cards)}</div></div></button>`).join('');
 }
 $('players').addEventListener('click', e => { const b = e.target.closest('[data-p]'); if (b) showPlayer(b.dataset.p); });
 
 function promptText() {
   const s = S(); const p = s.players[s.turn];
-  if (s.phase === 'END') return L('Partita finita.', 'Game over.');
-  if (!human()) return pname(p) + L(' sta giocando…', ' is playing…');
+  if (s.phase === 'END') return L('Partita finita.', 'Game over.', 'Spelet är slut.');
+  if (!human()) return pname(p) + L(' sta giocando…', ' is playing…', ' spelar…');
   const P = s.pending;
   if (P) return {
-    BULB: L('Tocca la camera del Nautilus dove mettere la <b>lampadina</b>.', 'Tap the Nautilus chamber where the <b>Light Bulb</b> goes.'),
-    ADD_SAILOR: L('Tocca la camera dove aggiungere un <b>marinaio</b>.', 'Tap the chamber where a <b>Sailor</b> joins.'),
-    LOSE_SAILOR: L('Tocca la camera da cui togliere un <b>marinaio</b>.', 'Tap the chamber a <b>Sailor</b> leaves.'),
-    QUADRANT: L('Il Mind token è al centro: scegli verso dove si sposta la mente di Nemo.', 'The Mind token is in the centre: choose where Nemo\'s mind moves.'),
-    ROUTE: L('La carta era nel fiume centrale: scegli su quale rotta compare la nave.', 'The card was in the middle River: choose the route for the Warship.'),
-    NEM_SINK: L('La Nemesis affonda una nave: tocca quale.', 'The Nemesis sinks a Warship: tap which one.')
+    BULB: L('Tocca la camera del Nautilus dove mettere la <b>lampadina</b>.', 'Tap the Nautilus chamber where the <b>Light Bulb</b> goes.', 'Tryck på den kammare i Nautilus där <b>Glödlampan</b> ska ligga.'),
+    ADD_SAILOR: L('Tocca la camera dove aggiungere un <b>marinaio</b>.', 'Tap the chamber where a <b>Sailor</b> joins.', 'Tryck på kammaren där en <b>Sjöman</b> ansluter.'),
+    LOSE_SAILOR: L('Tocca la camera da cui togliere un <b>marinaio</b>.', 'Tap the chamber a <b>Sailor</b> leaves.', 'Tryck på kammaren som en <b>Sjöman</b> lämnar.'),
+    QUADRANT: L('Il Mind token è al centro: scegli verso dove si sposta la mente di Nemo.', 'The Mind token is in the centre: choose where Nemo\'s mind moves.', 'Sinnesmarkören står i mitten: välj vart Nemos sinne rör sig.'),
+    ROUTE: L('La carta era nel fiume centrale: scegli su quale rotta compare la nave.', 'The card was in the middle River: choose the route for the Warship.', 'Kortet låg i den mittersta Floden: välj rutt för Krigsskeppet.'),
+    NEM_SINK: L('La Nemesis affonda una nave: tocca quale.', 'The Nemesis sinks a Warship: tap which one.', 'Nemesis sänker ett Krigsskepp: tryck på vilket.')
   }[P.kind];
   const nav = E.power('NAVIGATE'), atk = E.power('ATTACK');
-  if (ui.sel && ui.sel.kind === 'NAV') return L('Navigate ' + nav + ': tocca la carta di destinazione (fino a ' + nav + ' passi, non in diagonale).', 'Navigate ' + nav + ': tap the destination card (up to ' + nav + ' steps, no diagonals).');
-  if (ui.sel && ui.sel.kind === 'ATTACK') return L('Attack ' + atk + ': tocca la nave da affondare (scudo ' + E.shield() + ').', 'Attack ' + atk + ': tap the Warship to sink (shield ' + E.shield() + ').');
-  return '<b>' + pname(p) + '</b>' + L(', azione ' + (4 - s.actions) + ' di 3: tocca il tasto di una camera del Nautilus (EXPLORE, ATTACK…).', ', action ' + (4 - s.actions) + ' of 3: tap a Nautilus chamber button (EXPLORE, ATTACK…).');
+  if (ui.sel && ui.sel.kind === 'NAV') return L('Navigate ' + nav + ': tocca la carta di destinazione (fino a ' + nav + ' passi, non in diagonale).', 'Navigate ' + nav + ': tap the destination card (up to ' + nav + ' steps, no diagonals).', 'Navigate ' + nav + ': tryck på målkortet (upp till ' + nav + ' steg, inte diagonalt).');
+  if (ui.sel && ui.sel.kind === 'ATTACK') return L('Attack ' + atk + ': tocca la nave da affondare (scudo ' + E.shield() + ').', 'Attack ' + atk + ': tap the Warship to sink (shield ' + E.shield() + ').', 'Attack ' + atk + ': tryck på Krigsskeppet som ska sänkas (sköld ' + E.shield() + ').');
+  return '<b>' + pname(p) + '</b>' + L(', azione ' + (4 - s.actions) + ' di 3: tocca il tasto di una camera del Nautilus (EXPLORE, ATTACK…).', ', action ' + (4 - s.actions) + ' of 3: tap a Nautilus chamber button (EXPLORE, ATTACK…).', ', handling ' + (4 - s.actions) + ' av 3: tryck på en kammarknapp på Nautilus (EXPLORE, ATTACK…).');
 }
 function renderPrompt(T) {
   const s = S(); const pr = $('prompt');
@@ -244,10 +247,10 @@ function renderPrompt(T) {
   const b = [];
   if (!ui.busy && human()) {
     const P = s.pending;
-    if (P && P.kind === 'ROUTE') for (const r of P.options) b.push([r === 'N' ? L('Rotta nord', 'North route') : L('Rotta sud', 'South route'), () => E.choose(r)]);
+    if (P && P.kind === 'ROUTE') for (const r of P.options) b.push([r === 'N' ? L('Rotta nord', 'North route', 'Norra rutten') : L('Rotta sud', 'South route', 'Södra rutten'), () => E.choose(r)]);
     if (P && P.kind === 'QUADRANT') for (const q of P.options) b.push([Q_TXT()[q], () => E.choose(q)]);
-    if (!P && ui.sel) b.push([L('Annulla', 'Cancel'), null, '', true]);
-    if (!P && !ui.sel && E.canDeclare()) b.push([L('Dichiara vittoria', 'Declare victory'), () => E.act({ t: 'DECLARE' }), 'go']);
+    if (!P && ui.sel) b.push([L('Annulla', 'Cancel', 'Avbryt'), null, '', true]);
+    if (!P && !ui.sel && E.canDeclare()) b.push([L('Dichiara vittoria', 'Declare victory', 'Utropa seger'), () => E.act({ t: 'DECLARE' }), 'go']);
   }
   $('promptBtns').innerHTML = b.map((x, i) => `<button data-b="${i}" class="${x[2] || ''}">${x[0]}</button>`).join('');
   $('promptBtns')._b = b;
@@ -287,7 +290,7 @@ function renderSea(T) {
       } else if (c === ml) {
         h += `<div class="${cls}" data-cell="${k}" style="${st}"><img class="art" src="img/maelstrom.jpg" alt="Maelstrom"></div>`;
       } else if (c === 5 && row.stack.length) {
-        h += `<div class="mc" style="${st}"><img class="art" src="img/back.jpg" alt="${L('Mazzo', 'Deck')}"><span class="cnt">${row.stack.length}</span></div>`;
+        h += `<div class="mc" style="${st}"><img class="art" src="img/back.jpg" alt="${L('Mazzo', 'Deck', 'Lek')}"><span class="cnt">${row.stack.length}</span></div>`;
       }
     }
   }
@@ -328,17 +331,17 @@ function renderNaut(T) {
     h += `<div class="chamber ${tg && tg !== 'menu' ? 'tgt' : ''} ${isSrc ? 'src' : ''} ${hl.ch === c ? 'hl' : ''}" data-ch="${c}" style="left:${fx * 100}%;top:${fy * 100}%;width:${d}px;height:${d}px">${cubes}</div>`;
     const pw = E.power(c);
     const by = fy * H + CHAMBER_R * W * 0.98;
-    h += `<button class="redis ${tg ? 'tgt' : ''} ${tg ? '' : 'off'}" data-ch="${c}" style="left:${fx * 100}%;top:${Math.min(by, H - 24)}px">${tg && tg !== 'menu' ? L('QUI', 'HERE') : c}<b>${pw}</b></button>`;
+    h += `<button class="redis ${tg ? 'tgt' : ''} ${tg ? '' : 'off'}" data-ch="${c}" style="left:${fx * 100}%;top:${Math.min(by, H - 24)}px">${tg && tg !== 'menu' ? L('QUI', 'HERE', 'HÄR') : c}<b>${pw}</b></button>`;
   }
   h += `<span class="stock" style="left:3%;top:4%"><img src="img/gem.png" alt="">${s.chest}</span>`;
   h += `<span class="stock" style="right:3%;top:30%"><img src="img/wreck.png" alt="">${s.wrecks}</span>`;
   $('naut').innerHTML = h; $('naut')._T = T;
-  $('powerHint').textContent = L('scudo navi ', 'Warship shield ') + E.shield() + ' · Uprising ' + E.uprising();
+  $('powerHint').textContent = L('scudo navi ', 'Warship shield ', 'Krigsskeppens sköld ') + E.shield() + ' · Uprising ' + E.uprising();
 }
 $('naut').addEventListener('click', e => {
   const el = e.target.closest('[data-ch]'); if (!el || ui.busy) return;
   const T = $('naut')._T || { ch: {} }; const c = el.dataset.ch; const tg = T.ch[c];
-  if (!tg) { if (human() && !S().pending) toast(L('La camera ' + CH_IT[c] + ' è vuota.', 'The ' + CH_IT[c] + ' chamber is empty.')); return; }
+  if (!tg) { if (human() && !S().pending) toast(L('La camera ' + CH_IT[c] + ' è vuota.', 'The ' + CH_IT[c] + ' chamber is empty.', 'Kammaren ' + CH_IT[c] + ' är tom.')); return; }
   if (tg === 'menu') chamberMenu(c); else perform(tg);
 });
 function chamberMenu(c) {
@@ -346,24 +349,24 @@ function chamberMenu(c) {
   const n = s.naut; const id = E.cardAt(n.r, n.c);
   if (c === 'NAVIGATE') {
     const nt = E.navTargets();
-    opts.push([L(`Naviga: fino a ${pw} ${pw === 1 ? 'passo' : 'passi'}`, `Navigate: up to ${pw} ${pw === 1 ? 'step' : 'steps'}`), nt.length ? () => { ui.sel = { kind: 'NAV' }; closeSheet(); render(); $('seaWrap').scrollIntoView({ behavior: 'smooth', block: 'center' }); } : null, 'go']);
+    opts.push([L(`Naviga: fino a ${pw} ${pw === 1 ? 'passo' : 'passi'}`, `Navigate: up to ${pw} ${pw === 1 ? 'step' : 'steps'}`, `Navigera: upp till ${pw} steg`), nt.length ? () => { ui.sel = { kind: 'NAV' }; closeSheet(); render(); $('seaWrap').scrollIntoView({ behavior: 'smooth', block: 'center' }); } : null, 'go']);
   }
   if (c === 'ATTACK') {
     const at = E.attackTargets();
-    const why = !E.shipsNear(n.r, n.c).length ? L('Nessuna nave in diagonale rispetto al Nautilus.', 'No Warship diagonally adjacent to the Nautilus.') : L('Serve forza superiore allo scudo (' + E.shield() + ').', 'You need more power than the shield (' + E.shield() + ').');
-    opts.push([L(`Attacca una nave (forza ${pw}, scudo ${E.shield()})`, `Attack a Warship (power ${pw}, shield ${E.shield()})`), at.length ? (at.length === 1 ? () => perform(() => E.act({ t: 'ATTACK', route: at[0][0], s: at[0][1] })) : () => { ui.sel = { kind: 'ATTACK' }; closeSheet(); render(); $('seaWrap').scrollIntoView({ behavior: 'smooth', block: 'center' }); }) : null, 'go', at.length ? '' : why]);
+    const why = !E.shipsNear(n.r, n.c).length ? L('Nessuna nave in diagonale rispetto al Nautilus.', 'No Warship diagonally adjacent to the Nautilus.', 'Inget Krigsskepp diagonalt intill Nautilus.') : L('Serve forza superiore allo scudo (' + E.shield() + ').', 'You need more power than the shield (' + E.shield() + ').', 'Du behöver mer styrka än skölden (' + E.shield() + ').');
+    opts.push([L(`Attacca una nave (forza ${pw}, scudo ${E.shield()})`, `Attack a Warship (power ${pw}, shield ${E.shield()})`, `Attackera ett Krigsskepp (styrka ${pw}, sköld ${E.shield()})`), at.length ? (at.length === 1 ? () => perform(() => E.act({ t: 'ATTACK', route: at[0][0], s: at[0][1] })) : () => { ui.sel = { kind: 'ATTACK' }; closeSheet(); render(); $('seaWrap').scrollIntoView({ behavior: 'smooth', block: 'center' }); }) : null, 'go', at.length ? '' : why]);
   }
   let cardHtml = '';
   if (id !== null && id !== undefined && E.card(id).type === c) {
     const k = E.reclaimCheck();
-    opts.push([L(`Reclama «${E.card(id).title}» (${pw} su ${E.requirement(n.r, n.c)})`, `Reclaim “${E.card(id).title}” (${pw} vs ${E.requirement(n.r, n.c)})`), k.ok ? () => perform(() => E.act({ t: 'RECLAIM' })) : null, 'go', k.ok ? '' : tx(k.why)]);
+    opts.push([L(`Reclama «${E.card(id).title}» (${pw} su ${E.requirement(n.r, n.c)})`, `Reclaim “${E.card(id).title}” (${pw} vs ${E.requirement(n.r, n.c)})`, `Återta ”${E.card(id).title}” (${pw} mot ${E.requirement(n.r, n.c)})`), k.ok ? () => perform(() => E.act({ t: 'RECLAIM' })) : null, 'go', k.ok ? '' : tx(k.why)]);
     cardHtml = `<img src="img/m${id}.jpg" style="width:38%;float:right;margin-left:10px;border-radius:8px" alt="">`;
   }
-  opts.push([L('Riposa: ridistribuisci soltanto', 'Rest: just redistribute'), () => perform(() => E.act({ t: 'REST', ch: c }))]);
+  opts.push([L('Riposa: ridistribuisci soltanto', 'Rest: just redistribute', 'Vila: omfördela bara'), () => perform(() => E.act({ t: 'REST', ch: c }))]);
   const contents = L(`${s.ch[c].s} marinai${s.ch[c].b ? ', ' + s.ch[c].b + ' lampadine' : ''}${c === 'ATTACK' && s.ch[c].u ? ', ' + s.ch[c].u + ' Uprising' : ''}. Ridistribuendo, ogni marinaio va in una camera successiva, in senso orario.`,
-    `${s.ch[c].s} Sailors${s.ch[c].b ? ', ' + s.ch[c].b + ' Light Bulbs' : ''}${c === 'ATTACK' && s.ch[c].u ? ', ' + s.ch[c].u + ' Uprising' : ''}. When you redistribute, each Sailor moves to the next chamber, clockwise.`);
-  openSheet(`<h3>${CH_IT[c]} · ${L('potere', 'power')} ${pw}</h3>${cardHtml}<p>${contents}</p>
-    <div class="sheet-btns" style="clear:both">${opts.map((o, i) => `<button data-do="${i}" class="${o[2] || ''}" ${o[1] ? '' : 'disabled'}>${o[0]}</button>${o[3] ? `<div class="reason">${o[3]}</div>` : ''}`).join('')}<button data-do="x">${L('Annulla', 'Cancel')}</button></div>`);
+    `${s.ch[c].s} Sailors${s.ch[c].b ? ', ' + s.ch[c].b + ' Light Bulbs' : ''}${c === 'ATTACK' && s.ch[c].u ? ', ' + s.ch[c].u + ' Uprising' : ''}. When you redistribute, each Sailor moves to the next chamber, clockwise.`, `${s.ch[c].s} Sjömän${s.ch[c].b ? ', ' + s.ch[c].b + ' Glödlampor' : ''}${c === 'ATTACK' && s.ch[c].u ? ', ' + s.ch[c].u + ' Uppror' : ''}. När du omfördelar flyttar varje Sjöman till nästa kammare, medurs.`);
+  openSheet(`<h3>${CH_IT[c]} · ${L('potere', 'power', 'styrka')} ${pw}</h3>${cardHtml}<p>${contents}</p>
+    <div class="sheet-btns" style="clear:both">${opts.map((o, i) => `<button data-do="${i}" class="${o[2] || ''}" ${o[1] ? '' : 'disabled'}>${o[0]}</button>${o[3] ? `<div class="reason">${o[3]}</div>` : ''}`).join('')}<button data-do="x">${L('Annulla', 'Cancel', 'Avbryt')}</button></div>`);
   const m = { x: closeSheet }; opts.forEach((o, i) => { if (o[1]) m[i] = () => { closeSheet(); o[1](); }; }); sheetDo(m);
 }
 
@@ -392,37 +395,37 @@ window.addEventListener('resize', () => { if (S() && !$('game').classList.contai
 function openSheet(html, lock) { $('sheetContent').innerHTML = html; $('sheet').classList.remove('hidden'); $('sheet').dataset.lock = lock ? '1' : ''; }
 function closeSheet() { $('sheet').classList.add('hidden'); }
 function sheetDo(m) { $('sheet')._do = m; }
-const closeBtn = () => `<div class="sheet-btns"><button data-do="x">${L('Chiudi', 'Close')}</button></div>`;
+const closeBtn = () => `<div class="sheet-btns"><button data-do="x">${L('Chiudi', 'Close', 'Stäng')}</button></div>`;
 $('sheet').addEventListener('click', e => {
   if (e.target.classList.contains('sheet-bg') && !$('sheet').dataset.lock) closeSheet();
   const fl = e.target.closest('[data-lang]'); if (fl) { setLang(fl.dataset.lang); showMenu(); return; }
   const b = e.target.closest('[data-do]'); if (b && !b.disabled && $('sheet')._do) { const f = $('sheet')._do[b.dataset.do]; if (f) f(); }
 });
 function fxText(f) {
-  if (f.startsWith('I:')) { const d = f.slice(2); return L('squilibrio verso ', 'imbalance towards ') + DIR_TXT()[d] + (d.length === 1 ? L(' (dal centro scegli il quadrante)', ' (from the centre you choose the quadrant)') : ''); }
+  if (f.startsWith('I:')) { const d = f.slice(2); return L('squilibrio verso ', 'imbalance towards ', 'obalans mot ') + DIR_TXT()[d] + (d.length === 1 ? L(' (dal centro scegli il quadrante)', ' (from the centre you choose the quadrant)', ' (från mitten väljer du kvadrant)') : ''); }
   return FX_TXT()[f];
 }
 function cardInfo(id) {
   const cd = E.card(id);
-  return `<p>${L('Requisito', 'Requirement')}: <b>${CH_IT[cd.type]} ${cd.req}</b>${cd.fate ? ' · ' + L('simbolo Fate ', 'Fate symbol ') + (cd.fate === 'K' ? L('⌘ (Razionalità)', '⌘ (Rationality)') : L('Ⓐ (Passione)', 'Ⓐ (Passion)')) : ''}</p>
-    <ul class="fxlist">${cd.fx.map(f => `<li>${fxText(f)}</li>`).join('')}${cd.ship ? `<li>${L('evoca una nave da guerra', 'summon a Warship')}</li>` : ''}</ul>`;
+  return `<p>${L('Requisito', 'Requirement', 'Krav')}: <b>${CH_IT[cd.type]} ${cd.req}</b>${cd.fate ? ' · ' + L('simbolo Fate ', 'Fate symbol ', 'Ödessymbol ') + (cd.fate === 'K' ? L('⌘ (Razionalità)', '⌘ (Rationality)', '⌘ (Rationalitet)') : L('Ⓐ (Passione)', 'Ⓐ (Passion)', 'Ⓐ (Passion)')) : ''}</p>
+    <ul class="fxlist">${cd.fx.map(f => `<li>${fxText(f)}</li>`).join('')}${cd.ship ? `<li>${L('evoca una nave da guerra', 'summon a Warship', 'kalla fram ett Krigsskepp')}</li>` : ''}</ul>`;
 }
 function cardSheet(id, r, c) {
   const cd = E.card(id); const req = E.requirement(r, c);
   openSheet(`<div class="cardview"><img src="img/m${id}.jpg" alt=""><div><h3>${cd.title}</h3>${cardInfo(id)}
-    ${req > cd.req ? `<p class="reason">${L('Le navi vicine alzano il requisito a ', 'Nearby Warships raise the requirement to ')}${req}.</p>` : ''}</div></div>${closeBtn()}`);
+    ${req > cd.req ? `<p class="reason">${L('Le navi vicine alzano il requisito a ', 'Nearby Warships raise the requirement to ', 'Närliggande Krigsskepp höjer kravet till ')}${req}.</p>` : ''}</div></div>${closeBtn()}`);
   sheetDo({ x: closeSheet });
 }
 function infoMaelstrom() {
   openSheet(`<div class="cardview"><img src="img/maelstrom.jpg" alt=""><div><h3>Maelstrom</h3><p>${L(
     'Se il Nautilus entra nel Maelstrom la partita finisce. Con il Mind token nella metà <b>Ovest</b> vincono i simboli <b>⌘</b>; nella metà <b>Est</b> i simboli <b>Ⓐ</b>. Con il token al centro conta il totale di entrambi.',
-    'If the Nautilus enters the Maelstrom the game ends. With the Mind token in the <b>West</b> half, <b>⌘</b> symbols win; in the <b>East</b> half, <b>Ⓐ</b> symbols win. With the token in the centre, both are added together.')}</p></div></div>${closeBtn()}`);
+    'If the Nautilus enters the Maelstrom the game ends. With the Mind token in the <b>West</b> half, <b>⌘</b> symbols win; in the <b>East</b> half, <b>Ⓐ</b> symbols win. With the token in the centre, both are added together.', 'Om Nautilus går in i Maelstrom tar spelet slut. Med Sinnesmarkören i den <b>västra</b> halvan vinner <b>⌘</b>-symbolerna; i den <b>östra</b> halvan vinner <b>Ⓐ</b>-symbolerna. Med markören i mitten räknas båda tillsammans.')}</p></div></div>${closeBtn()}`);
   sheetDo({ x: closeSheet });
 }
 function showPlayer(k) {
   const s = S();
   if (k === 'nem') {
-    openSheet(`<div class="cardview"><img src="img/nemesis.jpg" alt=""><div><h3>Nemesis</h3><p>${L('Memorie della Nemesis', 'Nemesis Memories')}: ${s.nemLoot.length}. ${L('Simboli', 'Symbols')} ⌘ ${E.fateCount(s.nemLoot, 'K')}, Ⓐ ${E.fateCount(s.nemLoot, 'A')}.</p></div></div>
+    openSheet(`<div class="cardview"><img src="img/nemesis.jpg" alt=""><div><h3>Nemesis</h3><p>${L('Memorie della Nemesis', 'Nemesis Memories', 'Nemesis minnen')}: ${s.nemLoot.length}. ${L('Simboli', 'Symbols', 'Symboler')} ⌘ ${E.fateCount(s.nemLoot, 'K')}, Ⓐ ${E.fateCount(s.nemLoot, 'A')}.</p></div></div>
       <div class="thumbs">${s.nemLoot.map(i => `<img src="img/m${i}.jpg" alt="">`).join('')}</div>${closeBtn()}`);
     sheetDo({ x: closeSheet }); return;
   }
@@ -431,16 +434,16 @@ function showPlayer(k) {
   if (p.char) {
     const half = E.CHARS[p.char].half;
     conds = E.CHARS[p.char].conds.map(c => `<li class="${E.condMet(c) ? 'ok' : ''}">${tx(E.COND_IT[c])} ${E.condMet(c) ? '✓' : '✗'}</li>`).join('') +
-      `<li class="${E.inHalf(half) ? 'ok' : ''}">${L('Equilibrio: Mind token nella metà ', 'Equilibrium: Mind token in the ')}${DIR_TXT()[half]}${L('', ' half')} ${E.inHalf(half) ? '✓' : '✗'}</li>`;
+      `<li class="${E.inHalf(half) ? 'ok' : ''}">${L('Equilibrio: Mind token nella metà ', 'Equilibrium: Mind token in the ', 'Jämvikt: Sinnesmarkören i den ')}${DIR_TXT()[half]}${L('', ' half', ' halvan')} ${E.inHalf(half) ? '✓' : '✗'}</li>`;
   }
   openSheet(`<div class="cardview"><img src="${portrait(p.char)}" alt=""><div><h3>${pname(p)}${p.ai ? ' (AI)' : ''}</h3>
-    ${p.char ? `<p>${L('Per dichiarare vittoria servono tutte e tre:', 'To declare victory you need all three:')}</p><ul class="fxlist">${conds}</ul>` : ''}
-    <p>${L('Memorie', 'Memories')}: ${p.cards.length} · ⌘ ${E.fateCount(p.cards, 'K')} · Ⓐ ${E.fateCount(p.cards, 'A')}</p></div></div>
+    ${p.char ? `<p>${L('Per dichiarare vittoria servono tutte e tre:', 'To declare victory you need all three:', 'För att utropa seger behöver du alla tre:')}</p><ul class="fxlist">${conds}</ul>` : ''}
+    <p>${L('Memorie', 'Memories', 'Minnen')}: ${p.cards.length} · ⌘ ${E.fateCount(p.cards, 'K')} · Ⓐ ${E.fateCount(p.cards, 'A')}</p></div></div>
     <div class="thumbs">${p.cards.map(i => `<img src="img/m${i}.jpg" alt="">`).join('')}</div>${closeBtn()}`);
   sheetDo({ x: closeSheet });
 }
 function showLog() {
-  openSheet(`<h3>${L('Diario di bordo', 'Logbook')}</h3><div class="log-full">${S().log.slice().reverse().map(l => `<div>${tx(l.m)}</div>`).join('')}</div>${closeBtn()}`);
+  openSheet(`<h3>${L('Diario di bordo', 'Logbook', 'Loggbok')}</h3><div class="log-full">${S().log.slice().reverse().map(l => `<div>${tx(l.m)}</div>`).join('')}</div>${closeBtn()}`);
   sheetDo({ x: closeSheet });
 }
 function showFinal() {
@@ -448,25 +451,25 @@ function showFinal() {
   let title = '', body = '';
   const T = r.type === 'K' ? '⌘' : r.type === 'A' ? 'Ⓐ' : '⌘ + Ⓐ';
   if (r.solo) {
-    title = r.why === 'Meltdown' ? L('Meltdown: Nemo perde la ragione', 'Meltdown: Nemo loses his mind') : r.win === null ? L('Pareggio nel Maelstrom', 'A tie in the Maelstrom') : r.win ? L('Nemo domina il suo passato!', 'Nemo masters his past!') : L('Vince la Nemesis', 'The Nemesis wins');
-    if (r.maelstrom) body = `<p>${L('Simboli', 'Symbols')} ${T}: Nemo ${r.me}, Nemesis ${r.nem}.</p>`;
+    title = r.why === 'Meltdown' ? L('Meltdown: Nemo perde la ragione', 'Meltdown: Nemo loses his mind', 'Meltdown: Nemo förlorar förståndet') : r.win === null ? L('Pareggio nel Maelstrom', 'A tie in the Maelstrom', 'Oavgjort i Maelstrom') : r.win ? L('Nemo domina il suo passato!', 'Nemo masters his past!', 'Nemo bemästrar sitt förflutna!') : L('Vince la Nemesis', 'The Nemesis wins', 'Nemesis vinner');
+    if (r.maelstrom) body = `<p>${L('Simboli', 'Symbols', 'Symboler')} ${T}: Nemo ${r.me}, Nemesis ${r.nem}.</p>`;
   } else {
     const names = r.winners.map(i => pname(s.players[i]));
     const me = r.winners.some(i => !s.players[i].ai);
-    title = (me ? L('Vittoria! ', 'Victory! ') : L('Vince ', 'Winner: ')) + names.join(L(' e ', ' and '));
-    if (r.declare) body = `<p>${pname(s.players[r.by])}${L(' ha dichiarato la vittoria: condizioni del Personaggio ed Equilibrio raggiunti.', ' declared victory: Character conditions and Equilibrium met.')}</p>`;
-    else body = `<p>${L('Il Maelstrom ha inghiottito il Nautilus. Contano i simboli ', 'The Maelstrom swallowed the Nautilus. Counting ')}<b>${T}</b>${L('.', ' symbols.')}</p><table class="tbl"><tr><th></th><th>${T}</th><th>${L('Carte', 'Cards')}</th></tr>${r.table.map(t => `<tr class="${r.winners.includes(t.members[0]) ? 'win' : ''}"><td>${t.members.map(i => pname(s.players[i])).join(' + ')}</td><td>${t.fate}</td><td>${t.n}</td></tr>`).join('')}</table>`;
+    title = (me ? L('Vittoria! ', 'Victory! ', 'Seger! ') : L('Vince ', 'Winner: ', 'Vinnare: ')) + names.join(L(' e ', ' and ', ' och '));
+    if (r.declare) body = `<p>${pname(s.players[r.by])}${L(' ha dichiarato la vittoria: condizioni del Personaggio ed Equilibrio raggiunti.', ' declared victory: Character conditions and Equilibrium met.', ' utropade seger: Karaktärens villkor och Jämvikt uppfyllda.')}</p>`;
+    else body = `<p>${L('Il Maelstrom ha inghiottito il Nautilus. Contano i simboli ', 'The Maelstrom swallowed the Nautilus. Counting ', 'Maelstrom slukade Nautilus. Räknar ')}<b>${T}</b>${L('.', ' symbols.', '-symboler.')}</p><table class="tbl"><tr><th></th><th>${T}</th><th>${L('Carte', 'Cards', 'Kort')}</th></tr>${r.table.map(t => `<tr class="${r.winners.includes(t.members[0]) ? 'win' : ''}"><td>${t.members.map(i => pname(s.players[i])).join(' + ')}</td><td>${t.fate}</td><td>${t.n}</td></tr>`).join('')}</table>`;
   }
-  openSheet(`<h3>${title}</h3>${body}<div class="sheet-btns"><button class="go" data-do="n">${L('Nuova partita', 'New game')}</button><button data-do="l">${L('Diario di bordo', 'Logbook')}</button><button data-do="x">${L('Guarda il tavolo', 'Look at the table')}</button></div>`, true);
+  openSheet(`<h3>${title}</h3>${body}<div class="sheet-btns"><button class="go" data-do="n">${L('Nuova partita', 'New game', 'Nytt spel')}</button><button data-do="l">${L('Diario di bordo', 'Logbook', 'Loggbok')}</button><button data-do="x">${L('Guarda il tavolo', 'Look at the table', 'Titta på bordet')}</button></div>`, true);
   sheetDo({ n: () => { closeSheet(); backToSetup(); }, l: showLog, x: closeSheet });
 }
 function showMenu() {
   openSheet(`<h3>Menu</h3><div class="sheet-btns"><div class="flagrow">${langButtons()}</div>
-    <button data-do="aid">${L('Promemoria icone', 'Icon reference')}</button><button data-do="l">${L('Diario di bordo', 'Logbook')}</button><button data-do="r">${L('Regole in breve', 'Quick rules')}</button>
-    <button data-do="n">${L('Nuova partita', 'New game')}</button><button data-do="x">${L('Chiudi', 'Close')}</button></div>`);
+    <button data-do="aid">${L('Promemoria icone', 'Icon reference', 'Ikonguide')}</button><button data-do="l">${L('Diario di bordo', 'Logbook', 'Loggbok')}</button><button data-do="r">${L('Regole in breve', 'Quick rules', 'Snabbregler')}</button>
+    <button data-do="n">${L('Nuova partita', 'New game', 'Nytt spel')}</button><button data-do="x">${L('Chiudi', 'Close', 'Stäng')}</button></div>`);
   sheetDo({ aid: () => { openSheet(`<img src="img/aid.jpg" style="width:100%;border-radius:10px" alt="">${closeBtn()}`); sheetDo({ x: closeSheet }); },
     l: showLog, r: showRules, x: closeSheet,
-    n: () => { openSheet(`<h3>${L('Nuova partita?', 'New game?')}</h3><p>${L('La partita in corso andrà persa.', 'The current game will be lost.')}</p><div class="sheet-btns"><button class="go" data-do="y">${L('Sì, ricomincia', 'Yes, start over')}</button><button data-do="x">${L('Annulla', 'Cancel')}</button></div>`); sheetDo({ y: () => { drop(SAVE); closeSheet(); backToSetup(); }, x: closeSheet }); } });
+    n: () => { openSheet(`<h3>${L('Nuova partita?', 'New game?', 'Nytt spel?')}</h3><p>${L('La partita in corso andrà persa.', 'The current game will be lost.', 'Det pågående spelet går förlorat.')}</p><div class="sheet-btns"><button class="go" data-do="y">${L('Sì, ricomincia', 'Yes, start over', 'Ja, börja om')}</button><button data-do="x">${L('Annulla', 'Cancel', 'Avbryt')}</button></div>`); sheetDo({ y: () => { drop(SAVE); closeSheet(); backToSetup(); }, x: closeSheet }); } });
 }
 function showRules() {
   const it = `<h3>Mobilis in Mobili in breve</h3><div class="rules">
@@ -495,7 +498,20 @@ function showRules() {
   <h4>Warships and Rivers</h4><p>Warships enter from the right of each route (at most 4 per route). Reclaimed cards close the gap towards the left; when a deck runs out, the Maelstrom emerges.</p>
   <h4>Maelstrom</h4><p>Whoever steers the Nautilus into it ends the game: with the mind in the West, ⌘ symbols win; in the East, Ⓐ symbols win. Ties go to most Memories.</p>
   <h4>4 players</h4><p>Two teams of two: a team wins if either player meets their own condition; in the Maelstrom, teammates add up their cards.</p></div>`;
-  openSheet((lang === 'en' ? en : it) + closeBtn());
+  const sv = `<h3>Mobilis in Mobili: snabbregler</h3><div class="rules">
+  <p>Nemo har gått vilse i Maelstrom. Varje spelare är en röst i hans sinne och styr samma Nautilus för att ta kontrollen.</p>
+  <h4>Din tur: 3 handlingar</h4><ul>
+  <li><b>Navigate</b>: omfördela Navigate-kammaren och flytta Nautilus lika många steg som dess styrka, aldrig diagonalt.</li>
+  <li><b>Återta ett minne</b>: Nautilus måste stå på kortet. Omfördela kammaren av samma typ: styrkan måste nå kravet (+1 för varje Krigsskepp diagonalt intill). Utför effekterna från vänster till höger.</li>
+  <li><b>Attack</b>: omfördela Attack-kammaren och sänk ett Krigsskepp diagonalt intill Nautilus. Styrkan måste överstiga skölden (= Vrak i Abyssal Graveyard). Varje sänkning flyttar sinnet mot Hämnden.</li>
+  <li><b>Vila</b>: omfördela en kammare utan annan effekt.</li>
+  <li><b>Utropa seger</b> om du uppfyller båda Karaktärens villkor och Sinnesmarkören står i din halva.</li></ul>
+  <h4>Mancala</h4><p>En kammares styrka är antalet Sjömän, plus Glödlampor (och Uppror i Attack) om minst en Sjöman finns där. Att omfördela flyttar Sjömännen en per kammare, medurs: Innovate → Attack → Revolution → Explore → Navigate.</p>
+  <h4>Obalans</h4><p>I den angivna kvadranten flyttar markören till nästa ring utåt, i den motsatta tillbaka mot mitten, annars glider den runt ringen. Bortom kanten väntar Meltdown: den aktiva spelaren kastar alla sina minnen och markören återvänder till mitten.</p>
+  <h4>Krigsskepp och Floder</h4><p>Krigsskepp kommer in från höger på varje rutt (högst 4 per rutt). Återtagna kort sluter luckan åt vänster; när en lek tar slut dyker Maelstrom upp.</p>
+  <h4>Maelstrom</h4><p>Den som styr in Nautilus avslutar spelet: med sinnet i väster vinner ⌘-symbolerna, i öster Ⓐ-symbolerna. Vid lika vinner flest minnen.</p>
+  <h4>4 spelare</h4><p>Två lag om två: ett lag vinner om någon av spelarna uppfyller sitt eget villkor; i Maelstrom räknas lagkamraternas kort ihop.</p></div>`;
+  openSheet((lang === 'en' ? en : lang === 'sv' ? sv : it) + closeBtn());
   sheetDo({ x: closeSheet });
 }
 

@@ -384,8 +384,9 @@ function renderEq(T) {
   for (const q in T.q) { const [qx, qy] = mindXY(1, q); h += `<button class="qspot tgt" data-q="${q}" style="left:${qx * 100}%;top:${qy * 100}%"></button>`; }
   if (ui.hl && ui.hl.q) { const [qx, qy] = mindXY(1, ui.hl.q); h += `<span class="qspot hl" style="left:${qx * 100}%;top:${qy * 100}%"></span>`; }
   const tags = { VOYAGE: [0.19, 0.245, `${s.chest} > ${E.shipsAfloat()}`], REVENGE: [0.81, 0.245, `${s.wrecks} > ${E.totalBulbs()}`],
-    TECHNOLOGY: [0.19, 0.925, `${E.totalBulbs()} > ${s.wrecks}`], REVOLUTION: [0.81, 0.925, `${E.uprising()} > ${E.shipsAfloat()}`] };
-  for (const k in tags) { const [tx_, ty, txt] = tags[k]; h += `<span class="condtag ${E.condMet(k) ? 'ok' : 'no'}" style="left:${tx_ * 100}%;top:${ty * 100}%;transform:translateX(-50%)">${txt} ${E.condMet(k) ? '✓' : ''}</span>`; }
+    TECHNOLOGY: [0.19, 0.782, `${E.totalBulbs()} > ${s.wrecks}`, true], REVOLUTION: [0.81, 0.782, `${E.uprising()} > ${E.shipsAfloat()}`, true] };
+  // Technology e Revolution: il contatore sta sopra i simboli (ancorato in basso)
+  for (const k in tags) { const [tx_, ty, txt, above] = tags[k]; h += `<span class="condtag ${E.condMet(k) ? 'ok' : 'no'}" style="left:${tx_ * 100}%;top:${ty * 100}%;transform:translate(-50%,${above ? '-100%' : '0'})">${txt} ${E.condMet(k) ? '✓' : ''}</span>`; }
   $('eq').innerHTML = h; $('eq')._T = T;
 }
 $('eq').addEventListener('click', e => { const b = e.target.closest('[data-q]'); const T = $('eq')._T; if (b && T && T.q[b.dataset.q] && !ui.busy) perform(T.q[b.dataset.q]); });

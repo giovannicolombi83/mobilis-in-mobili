@@ -266,8 +266,8 @@ $('miniLog').onclick = () => showLog();
 // ---------- mare
 function seaGeo() {
   const w = $('seaWrap').clientWidth - 12; const gx = 4;
-  const cw = (w - 5 * gx) / 6, chh = cw * 1052 / 674, gy = cw * 0.42;
-  return { w, gx, cw, ch: chh, gy, h: 3 * chh + 2 * gy + 8 };
+  const cw = (w - 5 * gx) / 6, chh = cw * 1052 / 674, gy = cw * 0.42 + 8;
+  return { w, gx, cw, ch: chh, gy, h: 3 * chh + 2 * gy + 22 };
 }
 const cx = (g, c) => c * (g.cw + g.gx), cy = (g, r) => r * (g.ch + g.gy);
 function renderSea(T) {
@@ -383,8 +383,10 @@ function renderEq(T) {
   h += `<span class="meltring ${s.mind.ring === 3 ? 'warn' : ''}" style="left:${EQ_C[0] * 100}%;top:${EQ_C[1] * 100}%;width:${EQ_EDGE * 200}%;aspect-ratio:1"></span>`;
   for (const q in T.q) { const [qx, qy] = mindXY(1, q); h += `<button class="qspot tgt" data-q="${q}" style="left:${qx * 100}%;top:${qy * 100}%"></button>`; }
   if (ui.hl && ui.hl.q) { const [qx, qy] = mindXY(1, ui.hl.q); h += `<span class="qspot hl" style="left:${qx * 100}%;top:${qy * 100}%"></span>`; }
-  const tags = { VOYAGE: [0.19, 0.245, `${s.chest} > ${E.shipsAfloat()}`], REVENGE: [0.81, 0.245, `${s.wrecks} > ${E.totalBulbs()}`],
-    TECHNOLOGY: [0.19, 0.782, `${E.totalBulbs()} > ${s.wrecks}`, true], REVOLUTION: [0.81, 0.782, `${E.uprising()} > ${E.shipsAfloat()}`, true] };
+  // il simbolo (< > =) rispecchia i valori reali; la condizione è soddisfatta solo con >
+  const cmp = (a, b) => `${a} ${a > b ? '>' : a < b ? '<' : '='} ${b}`;
+  const tags = { VOYAGE: [0.19, 0.245, cmp(s.chest, E.shipsAfloat())], REVENGE: [0.81, 0.245, cmp(s.wrecks, E.totalBulbs())],
+    TECHNOLOGY: [0.19, 0.782, cmp(E.totalBulbs(), s.wrecks), true], REVOLUTION: [0.81, 0.782, cmp(E.uprising(), E.shipsAfloat()), true] };
   // Technology e Revolution: il contatore sta sopra i simboli (ancorato in basso)
   for (const k in tags) { const [tx_, ty, txt, above] = tags[k]; h += `<span class="condtag ${E.condMet(k) ? 'ok' : 'no'}" style="left:${tx_ * 100}%;top:${ty * 100}%;transform:translate(-50%,${above ? '-100%' : '0'})">${txt} ${E.condMet(k) ? '✓' : ''}</span>`; }
   $('eq').innerHTML = h; $('eq')._T = T;

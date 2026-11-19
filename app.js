@@ -334,7 +334,7 @@ function renderNaut(T) {
     h += `<button class="redis ${tg ? 'tgt' : ''} ${tg ? '' : 'off'}" data-ch="${c}" style="left:${fx * 100}%;top:${Math.min(by, H - 24)}px">${tg && tg !== 'menu' ? L('QUI', 'HERE', 'HÄR') : c}<b>${pw}</b></button>`;
   }
   h += `<span class="stock" style="left:3%;top:4%"><img src="img/gem.png" alt="">${s.chest}</span>`;
-  h += `<span class="stock" style="right:3%;top:30%"><img src="img/wreck.png" alt="">${s.wrecks}</span>`;
+  h += `<span class="stock" style="right:3%;top:23.6%"><img src="img/wreck.png" alt="">${s.wrecks}</span>`;
   $('naut').innerHTML = h; $('naut')._T = T;
   $('powerHint').textContent = L('scudo navi ', 'Warship shield ', 'Krigsskeppens sköld ') + E.shield() + ' · Uprising ' + E.uprising();
 }
